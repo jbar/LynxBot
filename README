@@ -1,0 +1,29 @@
+LynxBot/0.1b README
+===================
+
+LynxBot is a bash library to help creating webbot beyond the lynx browser.
+It parses and analyse the output of the lynx browser and send him commands.
+
+(NB: you need the lynx browser to use LynxBot)
+
+
+----- Installation -----
+
+    $ ./configure && make
+    # make install      (root right needed)
+
+
+--------- Use ----------
+
+In a first Terminal launch:
+    $ lynxbot.sh [an url]
+
+In a second Terminal, source the bash library and begin to play with its functions :
+    $ source /usr/local/lib/lynxbot/init_lynxbot
+    $ LB_startlynxbot
+    ...
+
+Note1: The bash completion will help you to list functions in this API (they all match "LB_*" pattern).
+
+Note2: Open the bash library /usr/local/lib/lynxbot/init_lynxbot to read the complete description of the functions.
+

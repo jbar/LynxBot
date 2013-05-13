@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LynxBotVersion="LynxBot/0.1b"
+LynxBotVersion="LynxBot/0.2"
 
 function exitlynxbot {
     kill $lynxpid
@@ -17,7 +17,8 @@ mkfifo /tmp/lynx_cmd_input.$$ || exit -1
 mkfifo /tmp/lynx_output.$$ || exit -1
 
 # Set the UserAgent
-    UserAgent="$(lynx -version | head -1)  $LynxBotVersion"
+   UserAgent="$(lynx -version | head -1)  $LynxBotVersion"
+	#UserAgent="Mozilla/5.0 (X11; Linux i686; rv:17.0) Gecko/20100101 Firefox/17.0"
 
 # be sure that lynx will use default english langage
 unset LANG

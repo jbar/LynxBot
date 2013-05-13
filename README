@@ -20,10 +20,12 @@ In a first Terminal launch:
 
 In a second Terminal, source the bash library and begin to play with its functions :
     $ source /usr/local/lib/lynxbot/init_lynxbot
+    $ echo "$LB_Help_startlynxbot"
     $ LB_startlynxbot
     ...
 
-Note1: The bash completion will help you to list functions in this API (they all match "LB_*" pattern).
+Note: The bash completion will help you to list functions and help messages in this API:
+      All function match "LB_*" pattern, while all help messages are in variable matching
+      "LB_Help_*" pattern.
 
-Note2: Open the bash library /usr/local/lib/lynxbot/init_lynxbot to read the complete description of the functions.
 

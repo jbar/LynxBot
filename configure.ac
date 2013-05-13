@@ -1,4 +1,4 @@
-AC_INIT([lynxbot], [0.1], [lynxbot-devel@lists.sourceforge.net])
+AC_INIT([lynxbot], [0.2], [jeanjacquesbrucker@gmail.com])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_PROG_CC
 AC_CONFIG_HEADERS([config.h])

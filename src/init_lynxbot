@@ -1,11 +1,14 @@
 #!/bin/bash
 # here are the command and function to be sourced to make a lynx bot.
 
-LynxBotBin="${BASH_ARGV[0]%/*}"
+pushd "${BASH_ARGV[0]%/*}" > /dev/null
+export LynxBotBin="$PWD"
+popd > /dev/null
 
-LB_Help_Version="${BASH_ARGV[0]##*/}/0.2 13May2013"
+export LB_Help_Version="${BASH_ARGV[0]##*/}/0.2 15May2013"
 echo "$LB_Help_Version
-Tip: all functions and their help messages are \"LB_\" prefixed, usefull for completion !-)"
+Tip: all functions and their help messages are \"LB_\" prefixed, usefull for completion !-)
+"
 
 LB_Help_get_current_link="LB_startlynxbot
 Connect to the first lynxbot.sh available.
@@ -16,8 +19,9 @@ function LB_startlynxbot {
     # search for a lynx to bot
     for fifo in /tmp/lynx_cmd_input.* ; do 
         if [ -p "$fifo" -a -p "${fifo/cmd_input/output}" -a ! -f "/tmp/current_bot.${fifo##*.}" ] ; then
-            echo $$ > /tmp/current_bot.${fifo#*.}
-            LynxPid=${fifo#*.}
+            export LynxBotPid=$$
+            export LynxPid=${fifo#*.}
+	    echo -e "LynxBotPid=$LynxBotPid" > "/tmp/current_bot.$LynxPid" || return 1
             break;
         fi
     done
@@ -27,12 +31,12 @@ function LB_startlynxbot {
     fi
     
     # stuff to avoid synchonisation problems
-    echo -n "0 _NULL_" > /tmp/current_link.$$ || exit -1
-    echo -n "0 _NULL_" > /tmp/current_linktype.$$ || exit -1
+    echo -n "0 _NULL_" > /tmp/current_link.$LynxBotPid || return 1
+    echo -n "0 _NULL_" > /tmp/current_linktype.$LynxBotPid || return 1
     nbla_=1
 
     # Start the lynx link and linktype extractor
-    "$LynxBotBin"/extractlastlinkfromlynx /tmp/current_link.$$ /tmp/current_linktype.$$ /tmp/current_error.$$ < "/tmp/lynx_output.$LynxPid" &
+    "$LynxBotBin"/extractlastlinkfromlynx /tmp/current_link.$LynxBotPid /tmp/current_linktype.$LynxBotPid /tmp/current_error.$LynxBotPid < "/tmp/lynx_output.$LynxPid" &
     
     # open the input fifo on fd 3
     exec 3<> "/tmp/lynx_cmd_input.$LynxPid"
@@ -40,32 +44,35 @@ function LB_startlynxbot {
     # Be sure that lynx is loaded
     LB_get_current_link > /dev/null
 }
+export -f LB_startlynxbot
 
 LB_Help_get_current_link="LB_get_current_link
 echo: the text of the current link
 return 0"
 function LB_get_current_link {
-    read nbla CurrentLink < /tmp/current_link.$$ 
+    nbla_=$((nbla+1));
     while ((nbla != nbla_)) ; do
-    	read nbla CurrentLink < /tmp/current_link.$$ 
+    	read nbla CurrentLink < /tmp/current_link.$LynxBotPid 
         "$LynxBotBin"/usleep 3000
-        read nbla_ CurrentLink < /tmp/current_link.$$
+        read nbla_ CurrentLink < /tmp/current_link.$LynxBotPid
     done
     echo "$CurrentLink"
 }
+export -f LB_get_current_link
 
 LB_Help_get_current_linktype="LB_get_current_linktype
 echo: the current link type (text)
 return 0"
 function LB_get_current_linktype {
-    read nbla CurrentLinkType < /tmp/current_linktype.$$ 
+    nbla_=$((nbla+1));
     while ((nbla != nbla_)) ; do
-    	read nbla CurrentLinkType < /tmp/current_linktype.$$ 
+    	read nbla CurrentLinkType < /tmp/current_linktype.$LynxBotPid 
         "$LynxBotBin"/usleep 3000
-        read nbla_ CurrentLinkType < /tmp/current_linktype.$$
+        read nbla_ CurrentLinkType < /tmp/current_linktype.$LynxBotPid
     done
     echo "$CurrentLinkType"
 }
+export -f LB_get_current_linktype
 
 LB_Help_get_current_page="LB_get_current_page [filename]
 Argument 1: file to store current (lynx) page (default : current_page)
@@ -73,8 +80,10 @@ echo: nothing
 return 0"
 function LB_get_current_page {
     CurrentPage="${1:-current_page}"
-    [ ! -f "$CurrentPage" ] || rm -f "$CurrentPage" || exit -3
-    "$LynxBotBin"/usleep 1000
+    [ ! -f "$CurrentPage" ] || rm -f "$CurrentPage" || return 3
+    if LB_get_current_linktype | grep -i "entry field" > /dev/null ; then
+	    echo "key ^V" >&3
+    fi
     echo "key p" >&3
     echo "key ^J" >&3
     echo "key ^U" >&3
@@ -85,6 +94,7 @@ function LB_get_current_page {
         "$LynxBotBin"/usleep 10000
     done
 }
+export -f LB_get_current_page
 
 LB_Help_get_current_source="LB_get_current_source [filename]
 Argument 1: file to store current source (default : current_source)
@@ -92,7 +102,10 @@ echo: nothing
 return 0"
 function LB_get_current_source {
     CurrentPage="${1:-current_source}"
-    [ ! -f "$CurrentPage" ] || rm -f "$CurrentPage" || exit -3
+    [ ! -f "$CurrentPage" ] || rm -f "$CurrentPage" || return 3
+    if LB_get_current_linktype | grep -i "entry field" > /dev/null ; then
+	    echo "key ^V" >&3
+    fi
     echo "key \\" >&3
     echo "key p" >&3
     echo "key ^J" >&3
@@ -104,6 +117,7 @@ function LB_get_current_source {
         "$LynxBotBin"/usleep 10000
     done
 }
+export -f LB_get_current_source
 
 LB_Help_go_nextl="LB_go_nextl [number]
 Argument 1 = number of link to jump (default : 1)
@@ -111,10 +125,12 @@ echo: nothing
 return 0"
 function LB_go_nextl {
     for ((if=1;if<=${1:-1};if++)) ; do
-	echo "key Down Arrow" >&3
+	#echo "key Down Arrow" >&3 #key Up or Down may reach section with no link.
+	echo "key <tab>" >&3
     done
 #    LB_get_current_link
 }
+export -f LB_go_nextl
 
 LB_Help_go_previousl="LB_go_previousl [number]
 Argument 1 = number of link to jump (default : 1)
@@ -122,10 +138,12 @@ echo: nothing
 return 0"
 function LB_go_previousl {
     for ((if=1;if<=${1:-1};if++)) ; do
-	echo "key Up Arrow" >&3
+	#echo "key Up Arrow" >&3 #key Up or Down may reach section with no link.
+	echo "key Back Tab" >&3
     done
 #    LB_get_current_link
 }
+export -f LB_go_previousl
 
 LB_Help_go_previouspage="LB_go_previouspage [number]
 Argument 1: which previous page to reach (default : 1)
@@ -136,17 +154,19 @@ function LB_go_previouspage {
 	echo "key Left Arrow" >&3
     done
 }
+export -f LB_go_previouspage
 
 LB_Help_secure_go_link="LB_secure_go_link
 echo: nothing
 return 9 if unsure link has been reached, 0 if success."
 function LB_secure_go_link {
-    [ ! -f "/tmp/current_error.$$" ] || rm -f "/tmp/current_error.$$" || exit -3
+    [ ! -f "/tmp/current_error.$LynxBotPid" ] || rm -f "/tmp/current_error.$LynxBotPid" || return 3
     echo "key Right Arrow" >&3
-    LB_get_current_page "/tmp/current_page.$$"
-    "$LynxBotBin"/usleep 5000
-    if [ -f "/tmp/current_error.$$" ] ; then return 9 ; fi
+    LB_get_current_page "/tmp/current_page.$LynxBotPid"
+    "$LynxBotBin"/usleep 50000
+    if [ -f "/tmp/current_error.$LynxBotPid" ] ; then return 9 ; fi
 }
+export -f LB_secure_go_link
 
 LB_Help_go_link="LB_go_link
 echo: nothing
@@ -154,6 +174,7 @@ return 0"
 function LB_go_link {
     echo "key Right Arrow" >&3
 }
+export -f LB_go_link
 
 LB_Help_go_firstl="LB_go_firstl
 Jump to the first link of the page.
@@ -162,6 +183,7 @@ return 0"
 function LB_go_firstl {
     echo "key Home" >&3
 }
+export -f LB_go_firstl
 
 LB_Help_go_lastl="LB_go_lastl
 Jump to the last link of the page.
@@ -170,6 +192,7 @@ return 0"
 function LB_go_lastl {
     echo "key End" >&3
 }
+export -f LB_go_lastl
 
 LB_Help_secure_go_to_url="LB_secure_go_to_url URL
 Argument 1: which url to get (mandatory)
@@ -177,17 +200,18 @@ echo: nothing
 return 9 if no given url or unsure that url has been reached, 0 if success."
 function LB_secure_go_to_url {
     if [ "$1" ] ; then
-		[ ! -f "/tmp/current_error.$$" ] || rm -f "/tmp/current_error.$$" || exit -3
+		[ ! -f "/tmp/current_error.$LynxBotPid" ] || rm -f "/tmp/current_error.$LynxBotPid" || return 3
 		echo "key g" >&3
     	"$LynxBotBin"/setstrforlynx "$1" >&3
     	echo "key ^J" >&3
-        LB_get_current_page "/tmp/current_page.$$"
+        LB_get_current_page "/tmp/current_page.$LynxBotPid"
         "$LynxBotBin"/usleep 5000
-        if [ -f "/tmp/current_error.$$" ] ; then return 9 ; fi
+        if [ -f "/tmp/current_error.$LynxBotPid" ] ; then return 9 ; fi
     else
         return 9
     fi
 }
+export -f LB_secure_go_to_url
 
 LB_Help_go_to_url="LB_go_to_url URL
 Argument 1: which url to get (mandatory)
@@ -202,6 +226,7 @@ function LB_go_to_url {
 		return 9
     fi
 }
+export -f LB_go_to_url
 
 LB_Help_refresh_page="LB_refresh_page
 echo: nothing
@@ -210,6 +235,7 @@ function LB_refresh_page {
 # no Argument
     echo "key ^R" >&3
 }
+export -f LB_refresh_page
 
 LB_Help_get_current_info="LB_get_current_info [filename]
 Argument 1: file to store info on current page and link (default: current_info)
@@ -220,6 +246,9 @@ function LB_get_current_info {
     LB_get_current_page "${1:-current_info}"
     echo "key =" >&3
 }
+export -f LB_get_current_info
+
+
 
 LB_Help_search_link="LB_search_link PATTERN [max_number]
 Argument 1: which link to search (mandatory)
@@ -238,6 +267,7 @@ function LB_search_link {
     done
     return 9
 }
+export -f LB_search_link
 
 LB_Help_search_linktype="LB_search_linktype PATTERN [max_number]
 Argument 1: which linktype to search (mandatory)
@@ -260,6 +290,7 @@ function LB_search_linktype {
     if ! [ "$1" ] ; then return 9 ; fi
     isearch=0
     while ((isearch++<${2:-64})) ; do
+#TODO: (re)move $2 use, and grep "@" instead
 	if echo "$(LB_get_current_linktype)" | grep "$1" > /dev/null ; then
 	    return 0
 	else
@@ -268,6 +299,7 @@ function LB_search_linktype {
     done
     return 9
 }
+export -f LB_search_linktype
 
 LB_Help_write_string="LB_write_string STRING
 Argument 1: String to write in a Text entry field.
@@ -277,6 +309,7 @@ function LB_write_string {
     if ! echo "$(LB_get_current_linktype)" | grep " entry field$" > /dev/null ; then return 9 ; fi
     "$LynxBotBin"/setstrforlynx "$1" >&3
 }
+export -f LB_write_string
 
 LB_Help_stop="LB_stop
 Close the connected lynx and lynxbot.sh session.
@@ -284,12 +317,12 @@ echo: nothing
 return 0."
 function LB_stop {
     echo "key ^D" >&3
-    rm -f "/tmp/current_link.$$" 
-    rm -f "/tmp/current_linktype.$$"
-    rm -f "/tmp/current_error.$$" 2> /dev/null
-    rm -f "/tmp/current_page.$$" 2> /dev/null
+    rm -f "/tmp/current_link.$LynxBotPid" 
+    rm -f "/tmp/current_linktype.$LynxBotPid"
+    rm -f "/tmp/current_error.$LynxBotPid" 2> /dev/null
+    rm -f "/tmp/current_page.$LynxBotPid" 2> /dev/null
     rm -f "/tmp/current_bot.$LynxPid"
     wait
     exec 3>&-
 }
-
+export -f LB_stop

@@ -28,4 +28,6 @@ Note: The bash completion will help you to list functions and help messages in t
       All function match "LB_*" pattern, while all help messages are in variable matching
       "LB_Help_*" pattern.
 
+Important: to properly works, the 2 terminals should run in the same working directory.
+  (removing such condition is a TODO)
 

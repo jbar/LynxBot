@@ -87,7 +87,7 @@ return 0"
 function LB_get_current_page {
 	CurrentPage="${1:-current_page}"
 	[ ! -f "$CurrentPage" ] || rm -f "$CurrentPage" || return 3
-	if LB_get_current_linktype | grep " entry field$" > /dev/null ; then
+	if LB_get_current_linktype | grep -i "\(textarea\|entry field\)" > /dev/null ; then
 		echo "key ^V" >&8
 	fi
 	echo "key p" >&8
@@ -109,7 +109,7 @@ return 0"
 function LB_get_current_source {
 	CurrentPage="${1:-current_source}"
 	[ ! -f "$CurrentPage" ] || rm -f "$CurrentPage" || return 3
-	if LB_get_current_linktype | grep "entry field$" > /dev/null ; then
+	if LB_get_current_linktype | grep -i "\(textarea\|entry field\)" > /dev/null ; then
 		echo "key ^V" >&8
 	fi
 	echo "key \\" >&8
@@ -187,6 +187,9 @@ Jump to the first link of the page.
 echo: nothing
 return 0"
 function LB_go_firstl {
+	if LB_get_current_linktype | grep -i "\(textarea\|entry field\)" > /dev/null ; then
+		echo "key ^V" >&8
+	fi
 	echo "key Home" >&8
 }
 export -f LB_go_firstl
@@ -196,6 +199,9 @@ Jump to the last link of the page.
 echo: nothing
 return 0"
 function LB_go_lastl {
+	if LB_get_current_linktype | grep -i "\(textarea\|entry field\)" > /dev/null ; then
+		echo "key ^V" >&8
+	fi
 	echo "key End" >&8
 }
 export -f LB_go_lastl
@@ -250,33 +256,42 @@ function LB_get_current_info {
 }
 export -f LB_get_current_info
 
-LB_Help_search_link="LB_search_link PATTERN [max_number]
-Argument 1: which link to search (mandatory)
-Argument 2: max number of links to parse before exiting (default: 64)
-echo: nothing
+LB_Help_search_link="LB_search_link [max_number] PATTERN 
+Argument 1: max number of links to parse before exiting, if the number is negative search is done backwards. (default: 64)
+Argument 2...: passed to grep to search link (mandatory)
+echo: the number of parsed links, followed by the founded link (grep output).
 return 0 if the link is found, 9 if not."
 function LB_search_link {
-	[ "$1" ] || return 9 
-	isearch=0
-	while ((isearch++<${2:-64})) ; do
-#TODO: (re)move $2 use, and grep "@" instead
-		if echo "$(LB_get_current_link)" | grep "$1" ; then
+	local isearch=0 maxn="$1" gonext output
+	((maxn)) && shift || maxn=64
+
+	[ "$1" ] || return 9
+	if ((maxn<0)) ; then
+		((maxn=-maxn))
+		gonext=LB_go_previousl
+	else
+		gonext=LB_go_nextl
+	fi
+
+	while ((isearch++<maxn)) ; do
+		if output="$(echo "$(LB_get_current_link)" | grep "$@")" ; then
+			echo "$((isearch-1)) $output"
 			return 0
 		else
-			LB_go_nextl
+			$gonext
 		fi
 	done
 	return 9
 }
 export -f LB_search_link
 
-LB_Help_search_linktype="LB_search_linktype PATTERN [max_number]
-Argument 1: which linktype to search (mandatory)
-Argument 2: max number of links to parse before exiting (default: 64)
-echo: nothing
+LB_Help_search_linktype="LB_search_linktype [max_number] PATTERN 
+Argument 1: max number of links to parse before exiting, if the number is negative search is done backwards. (default: 64)
+Argument 2...: passed to grep to search link type (mandatory)
+echo: the number of parsed links, followed by the founded link type (grep output).
 return 0 if the linktype is found, 9 if not.
 
-Note: Types use to be: 'Unknow', 'NORMAL LINK', 'Text entry field', 'Password entry field', 'Form submit button', 'Radio Button', 'Checkbox Field', 'Option list', and 'Choice list'."
+Note: Types use to be: 'Unknow', 'NORMAL LINK', 'Text entry field', 'Password entry field', 'Form submit button', 'Radio Button', 'Checkbox Field', 'Option list', 'Choice list' and Textarea."
 # type can be
 # 0 Unknow
 # 1 NORMAL LINK
@@ -287,15 +302,25 @@ Note: Types use to be: 'Unknow', 'NORMAL LINK', 'Text entry field', 'Password en
 # 6 Checkbox Field
 # 7 Option list
 # 8 Choice list
+# 9 Textarea
 function LB_search_linktype {
+	local isearch=0 maxn="$1" gonext output
+	((maxn)) && shift || maxn=64
+
 	[ "$1" ] || return 9
-	isearch=0
-	while ((isearch++<${2:-64})) ; do
-#TODO: (re)move $2 use, and grep "@" instead
-		if LB_get_current_linktype | grep "$1" > /dev/null ; then
+	if ((maxn<0)) ; then
+		((maxn=-maxn))
+		gonext=LB_go_previousl
+	else
+		gonext=LB_go_nextl
+	fi
+
+	while ((isearch++<maxn)) ; do
+		if output="$(echo "$(LB_get_current_linktype)" | grep "$@")" ; then
+			echo "$((isearch-1)) $output"
 			return 0
 		else
-			LB_go_nextl
+			$gonext
 		fi
 	done
 	return 9
@@ -305,9 +330,9 @@ export -f LB_search_linktype
 LB_Help_write_string="LB_write_string STRING
 Argument 1: String to write in a Text entry field.
 echo: nothing
-return 9 if current type is not ' entry field', 0 if OK."
+return 9 if current type is not ' entry field' or 'Textarea', 0 if OK."
 function LB_write_string {
-	LB_get_current_linktype | grep " entry field$" > /dev/null || return 9
+	LB_get_current_linktype | grep -i "\(textarea\|entry field\)" > /dev/null || return 9
 	"$LynxBotBin"/setstrforlynx "$1" >&8
 }
 export -f LB_write_string

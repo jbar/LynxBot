@@ -24,10 +24,17 @@ In a second Terminal, source the bash library and begin to play with its functio
     $ LB_startlynxbot
     ...
 
-Note: The bash completion will help you to list functions and help messages in this API:
-      All function match "LB_*" pattern, while all help messages are in variable matching
-      "LB_Help_*" pattern.
-
 Important: to properly works, the 2 terminals should run in the same working directory.
   (removing such condition is a TODO)
+
+Notes:
+
+ * The bash completion will help you to list functions and help messages in this API:
+   All function match "LB_*" pattern, while all help messages are in variable matching
+   "LB_Help_*" pattern.
+
+ * lynxbot.sh may not work well inside a pending screen. A workaround to make it run on a
+   remote machine whithout X display, is to use setsid (and dismiss also lynx output).
+   Example:
+    $ setsid lynxbot.sh -useragent "My Mozilla, etc..." "http://example.com" >/dev/null
 

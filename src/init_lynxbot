@@ -5,7 +5,7 @@ pushd "${BASH_ARGV[0]%/*}" > /dev/null
 export LynxBotBin="$PWD"
 popd > /dev/null
 
-export LB_Help_Version="${BASH_ARGV[0]##*/}/0.2 16May2013"
+export LB_Help_Version="${BASH_ARGV[0]##*/}/0.3 25May2013"
 echo "$LB_Help_Version
 Tip: all functions and their help messages are \"LB_\" prefixed, usefull for completion !-)
 "
@@ -95,8 +95,8 @@ function LB_get_current_page {
 	echo "key ^U" >&8
 	"$LynxBotBin"/setstrforlynx "$CurrentPage" >&8
 	echo "key ^J" >&8
-	# using fuser is better
-	while ! [ -f "$CurrentPage" ] ; do
+	# using fuser disallow an eventual race bug
+	while ! [ -f "$CurrentPage" ] || /sbin/fuser "$CurrentPage" 2>/dev/null 1>&2 ; do
 		"$LynxBotBin"/usleep 10000
 	done
 }
@@ -119,7 +119,8 @@ function LB_get_current_source {
 	"$LynxBotBin"/setstrforlynx "$CurrentPage" >&8
 	echo "key ^J" >&8
 	echo "key \\" >&8
-	while ! [ -f "$CurrentPage" ] ; do
+	# using fuser disallow an eventual race bug
+	while ! [ -f "$CurrentPage" ] || /sbin/fuser "$CurrentPage" >/dev/null 2>&1 ; do
 		"$LynxBotBin"/usleep 10000
 	done
 }
@@ -263,7 +264,7 @@ echo: the number of parsed links, followed by the founded link (grep output).
 return 0 if the link is found, 9 if not."
 function LB_search_link {
 	local isearch=0 maxn="$1" gonext output
-	((maxn)) && shift || maxn=64
+	((maxn)) 2>/dev/null && shift || maxn=64
 
 	[ "$1" ] || return 9
 	if ((maxn<0)) ; then
@@ -305,7 +306,7 @@ Note: Types use to be: 'Unknow', 'NORMAL LINK', 'Text entry field', 'Password en
 # 9 Textarea
 function LB_search_linktype {
 	local isearch=0 maxn="$1" gonext output
-	((maxn)) && shift || maxn=64
+	((maxn)) 2>/dev/null && shift || maxn=64
 
 	[ "$1" ] || return 9
 	if ((maxn<0)) ; then

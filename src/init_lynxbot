@@ -5,7 +5,7 @@ pushd "${BASH_ARGV[0]%/*}" > /dev/null
 export LynxBotBin="$PWD"
 popd > /dev/null
 
-export LB_Help_Version="${BASH_ARGV[0]##*/}/0.3 25May2013"
+export LB_Help_Version="${BASH_ARGV[0]##*/}/0.3 27May2013"
 echo "$LB_Help_Version
 Tip: all functions and their help messages are \"LB_\" prefixed, usefull for completion !-)
 "

@@ -36,5 +36,5 @@ Notes:
  * lynxbot.sh may not work well inside a pending screen. A workaround to make it run on a
    remote machine whithout X display, is to use setsid (and dismiss also lynx output).
    Example:
-    $ setsid lynxbot.sh -useragent "My Mozilla, etc..." "http://example.com" >/dev/null
+    $ setsid lynxbot.sh -useragent "My Mozilla, etc..." "http://example.com" >/dev/null 0<&1
 

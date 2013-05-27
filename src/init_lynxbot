@@ -10,6 +10,33 @@ echo "$LB_Help_Version
 Tip: all functions and their help messages are \"LB_\" prefixed, usefull for completion !-)
 "
 
+# From http://stackoverflow.com/questions/3338030/multiple-bash-traps-for-the-same-signal
+# And to call LB_stop on EXIT.
+# appends a command to a trap
+#
+# - 1st arg:  code to add
+# - remaining args:  names of traps to modify
+#
+trap_add() {
+	trap_add_cmd="$1"
+	shift || { echo "${FUNCNAME} usage error" >&2 ; return 1 ; }
+	for trap_add_name in "$@"; do
+		trap -- "$(
+		# helper fn to get existing trap command from output of trap -p
+		extract_trap_cmd() { printf '%s\n' "$3"; }
+		# print existing trap command
+		eval "extract_trap_cmd $(trap -p "${trap_add_name}")"
+		# print the new trap command
+		printf '%s' "${trap_add_cmd}"
+		)" "${trap_add_name}" \
+			|| { echo "${FUNCNAME} error: unable to add to trap ${trap_add_name}" >&2 ; return 1 ; }
+	done
+}
+# set the trace attribute for the above function.  this is
+# required to modify DEBUG or RETURN traps because functions don't
+# inherit them unless the trace attribute is set
+#declare -f -t trap_add
+
 LB_Help_get_current_link="LB_startlynxbot
 Connect to the first lynxbot.sh available.
 echo: nothing
@@ -58,9 +85,9 @@ return 0"
 function LB_get_current_link {
 	nbla_=$((nbla+1));
 	while ((nbla != nbla_)) ; do
-		read nbla CurrentLink < /tmp/current_link.$LynxBotPid 
+		read nbla CurrentLink < /tmp/current_link.$LynxBotPid || return 3
 		"$LynxBotBin"/usleep 3000
-		read nbla_ CurrentLink < /tmp/current_link.$LynxBotPid
+		read nbla_ CurrentLink < /tmp/current_link.$LynxBotPid || return 3
 	done
 	echo "$CurrentLink"
 }
@@ -72,9 +99,9 @@ return 0"
 function LB_get_current_linktype {
 	nbla_=$((nbla+1));
 	while ((nbla != nbla_)) ; do
-		read nbla CurrentLinkType < /tmp/current_linktype.$LynxBotPid 
+		read nbla CurrentLinkType < /tmp/current_linktype.$LynxBotPid || return 3
 		"$LynxBotBin"/usleep 3000
-		read nbla_ CurrentLinkType < /tmp/current_linktype.$LynxBotPid
+		read nbla_ CurrentLinkType < /tmp/current_linktype.$LynxBotPid || return 3
 	done
 	echo "$CurrentLinkType"
 }
@@ -289,8 +316,8 @@ Argument 2...: passed to grep to search link (mandatory)
 echo: the number of parsed links, followed by the founded link (grep output).
 return 0 if the link is found, 9 if not."
 function LB_search_link {
-	local isearch=0 maxn="$1" gonext output
-	((maxn)) 2>/dev/null && shift || maxn=64
+	local isearch=0 maxn=64 gonext output
+	[[ "$1" =~ ^-?[0-9]+$ ]] && maxn="$1" && shift
 
 	[ "$1" ] || return 9
 	if ((maxn<0)) ; then
@@ -331,8 +358,8 @@ Note: Types use to be: 'Unknow', 'NORMAL LINK', 'Text entry field', 'Password en
 # 8 Choice list
 # 9 Textarea
 function LB_search_linktype {
-	local isearch=0 maxn="$1" gonext output
-	((maxn)) 2>/dev/null && shift || maxn=64
+	local isearch=0 maxn=64 gonext output
+	[[ "$1" =~ ^-?[0-9]+$ ]] && maxn="$1" && shift
 
 	[ "$1" ] || return 9
 	if ((maxn<0)) ; then
@@ -382,3 +409,5 @@ function LB_stop {
 	exec 8>&-
 }
 export -f LB_stop
+trap_add LB_stop 0
+

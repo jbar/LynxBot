@@ -1,12 +1,12 @@
 #!/bin/bash
 
-LynxBotVersion="LynxBot/0.2"
+LynxBotVersion="LynxBot/0.3"
 
 function exitlynxbot {
-	kill $lynxpid
-	kill $teepid
-	rm /tmp/lynx_cmd_input.$$
-	rm /tmp/lynx_output.$$
+	kill $lynxpid >&2
+	kill $teepid >&2
+	rm /tmp/lynx_cmd_input.$$ >&2
+	rm /tmp/lynx_output.$$ >&2
 	wait
 }
 

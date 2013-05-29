@@ -24,7 +24,8 @@ In a second Terminal, source the bash library and begin to play with its functio
     $ LB_startlynxbot
     ...
 
-Important: to properly works, the 2 terminals should run in the same working directory.
+Important:
+  To properly works, the 2 terminals should run in the same working directory.
   (removing such condition is a TODO)
 
 Notes:
@@ -33,8 +34,7 @@ Notes:
    All function match "LB_*" pattern, while all help messages are in variable matching
    "LB_Help_*" pattern.
 
- * lynxbot.sh may not work well inside a pending screen. A workaround to make it run on a
-   remote machine whithout X display, is to use setsid (and dismiss also lynx output).
-   Example:
-    $ setsid lynxbot.sh -useragent "My Mozilla, etc..." "http://example.com" >/dev/null 0<&1
+ * If you don't care about lynx output and want to run all in one script, you may use
+   setsid. Example:
+    $ setsid lynxbot.sh -useragent "My Mozilla, etc..." "http://example.com" </dev/null >&0 2>&0 &
 

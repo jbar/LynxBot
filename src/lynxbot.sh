@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LynxBotVersion="LynxBot/0.4"
+LynxBotVersion="LynxBot/0.5 30May2013"
 
 function exitlynxbot {
 	kill $lynxpid >&2
@@ -25,7 +25,7 @@ unset LANG
 unset LC_MESSAGES
 
 # Start lynx browser
-TERM="xterm" lynx -nopause -accept_all_cookies -useragent="$UserAgent" -cmd_script=/tmp/lynx_cmd_input.$$ "$@" | tee /tmp/lynx_output.$$ &
+lynx -term="xterm" -nopause -accept_all_cookies -useragent="$UserAgent" -cmd_script=/tmp/lynx_cmd_input.$$ "$@" | tee /tmp/lynx_output.$$ &
 teepid=$!
 lynxpid=$(jobs -p)
 

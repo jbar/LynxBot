@@ -24,7 +24,7 @@ In a second Terminal, source the bash library and begin to play with its functio
     $ LB_startlynxbot
     ...
 
-Important:
+IMPORTANT:
   To properly works, the 2 terminals should run in the same working directory.
   (removing such condition is a TODO)
 
@@ -37,4 +37,6 @@ Notes:
  * If you don't care about lynx output and want to run all in one script, you may use
    setsid. Example:
     $ setsid lynxbot.sh -useragent "My Mozilla, etc..." "http://example.com" </dev/null >&0 2>&0 &
+
+ * The behaviour may depend on LINES and COLUMNS and change with such variables (which are unset when redirecting lynxbot.sh to /dev/null). A common mistake is to assume that first link is always selected after an LB_go_link, which is not always the case. To prevent this, always use LB_go_firstl to select the first link.
 

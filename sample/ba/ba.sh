@@ -53,18 +53,16 @@ function ba_login {
 			if LB_go_firstl && LB_write_string "$baPlayer" && LB_go_nextl && LB_write_string "$passwd" ; then
 				LB_go_nextl ; LB_go_link
 			else
+				((maxtry-- <= 0)) && echolog "ba_login error: entry field ... (exiting)" && return 9
 				((tosleep=5+RANDOM%25)) # 30 sec max
-				echolog "ba_login warning: unexpected entry field ... ($tosleep sec.)"
+				echolog "ba_login warning: unexpected entry field ... ($tosleep sec.)($maxtry)"
 				cp -vf rsc/current.lxp rsc/unexpected_login.lxp
 				LB_go_to_url "http://arena.softgames.de"
 				sleep $tosleep
 			fi
 			sleep 4
 		else
-			if ((maxtry--)) ; then
-				echolog "ba_login error: unexpected page ... (exiting)"
-				return 9
-			fi
+			((maxtry-- <= 0)) && echolog "ba_login error: unexpected page ... (exiting)" && return 9
 			((tosleep=5+RANDOM%600)) # 10 min max
 			echolog "ba_login warning: unexpected page ... ($tosleep sec.)($maxtry)"
 			cp -vf rsc/current.lxp rsc/unexpected_login.lxp
@@ -93,7 +91,7 @@ function ba_all {
 	baPlayer="${1:-$baPlayer}"
 	export baPlayer
 
-	local time0 time1 tosleep h hcup
+	local time0 time1 tosleep mailstatus h hcup
 	local passwd="${2:-$BA_PASSWD}"
 
 	if ! [ "$passwd" ] ; then
@@ -127,6 +125,15 @@ function ba_all {
 			ba_gohome || continue
 		fi
 
+		if greplog "Mail \[plus-ico.png\]" rsc/home.lxp ; then
+			if ((mailstatus==0)) ; then
+				mailstatus=1
+				#sendmail...
+			fi
+		else
+			mailstatus=0
+		fi
+
 		if greplog -o "Cup \[plus-ico.png\]" rsc/home.lxp || [[ $h != $hcup ]] ; then
 			hcup=$h
 			LB_go_firstl
@@ -139,7 +146,8 @@ function ba_all {
 					LB_go_nextl $((joinl-1))
 					LB_go_link && sleep $((RANDOM%2+1))
 					ba_cup
-				elif greplog "Left [1-9]" rsc/cup_home.lxp && joinl="$(grep -o "(Submit) [A-Z][a-z]*" rsc/cup_home.lxp | grep -n "Register\>" | grep -o "^[0-9]*")" ; then
+				elif greplog "Left [1-9]" rsc/cup_home.lxp && joinl="$(grep -o "(Submit) [A-Z][a-z]*" rsc/cup_home.lxp | grep -n "Register\>" | grep -o -m1 "^[0-9]*")" ; then
+					#joinl=${joinl##*0}
 					LB_go_nextl $((joinl-1))
 					LB_go_link && sleep $((RANDOM%2+1))
 					continue
@@ -310,7 +318,7 @@ function ba_cup {
 		i=1
 		# Search a weakest opponent
 		while ((${lifes[1]})) && ((${lifes[1]}>reflife)) ; do
-			LB_go_nextl 4 ; LB_go_link
+			LB_go_nextl 4 ; LB_go_link ; sleep $((RANDOM%2+1))
 			LB_get_current_page rsc/cup_opponent.lxp ; sleep $((RANDOM%2+1))
 			lifes=($(sed -n 's,.*hp-ico.png\] \([0-9]\+\).*,\1,p' rsc/cup_opponent.lxp))
 			((reflife+=RANDOM%(${baCupWins:=1}*3/2+1)))
@@ -321,7 +329,6 @@ function ba_cup {
 		if ! ((${lifes[1]})) ; then 
 			echolog "ba_cup warning: unexpected opponent"
 			cp -fv rsc/cup_opponent.lxp rsc/unexpected_cup_opponent.lxp
-
 			break
 		fi
 		# Fight
@@ -331,6 +338,7 @@ function ba_cup {
 		eval $(sed -n ' s,.*energy-ico.png. *\([0-9]\+\)/.*,nrj=\1,p ' rsc/cup_result.lxp)
 		if result="$(grep -B1 Defeated rsc/cup_result.lxp)" ; then # Win !
 			echolog $result "($((baCupWins++))|$i) nrj=$nrj"
+			LB_go_firstl
 			LB_go_link ; sleep $((RANDOM%2+1))
 			continue
 		elif result="$(grep -B1 Alive rsc/cup_result.lxp)" ; then # Lose

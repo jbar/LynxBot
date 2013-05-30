@@ -5,7 +5,7 @@ pushd "${BASH_ARGV[0]%/*}" > /dev/null
 export LynxBotBin="$PWD"
 popd > /dev/null
 
-export LB_Help_Version="${BASH_ARGV[0]##*/}/0.4 29May2013"
+export LB_Help_Version="${BASH_ARGV[0]##*/}/0.5 30May2013"
 echo "$LB_Help_Version
 Tip: all functions and their help messages are \"LB_\" prefixed, usefull for completion !-)
 "
@@ -219,6 +219,8 @@ function LB_go_firstl {
 		echo "key ^V" >&8
 	fi
 	echo "key Home" >&8
+	LB_go_nextl
+	LB_go_previousl
 }
 export -f LB_go_firstl
 
@@ -231,6 +233,8 @@ function LB_go_lastl {
 		echo "key ^V" >&8
 	fi
 	echo "key End" >&8
+	LB_go_previousl
+	LB_go_nextl
 }
 export -f LB_go_lastl
 

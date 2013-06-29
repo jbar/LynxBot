@@ -413,5 +413,5 @@ function LB_stop {
 	exec 8>&-
 }
 export -f LB_stop
-trap_add LB_stop 0
+trap -p EXIT | grep LB_stop > /dev/null || trap_add LB_stop 0
 

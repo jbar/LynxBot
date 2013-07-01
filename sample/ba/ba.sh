@@ -119,7 +119,7 @@ function ba_all {
 			ba_quests
 		fi
 
-		if greplog "(Submit) Map \[plus-ico.png\]" rsc/home.lxp ; then
+		if greplog "Map \[plus-ico.png\]" rsc/home.lxp ; then
 			LB_go_firstl && LB_go_link && sleep 3
 			ba_map
 			ba_gohome || continue
@@ -137,16 +137,16 @@ function ba_all {
 		if greplog -o "Cup \[plus-ico.png\]" rsc/home.lxp || [[ $h != $hcup ]] ; then
 			hcup=$h
 			LB_go_firstl
-			LB_search_link Mastery && LB_go_nextl 3 && LB_go_link && sleep 4
+			LB_search_link Mastery && LB_go_nextl 3 && LB_go_link ; sleep 5
 			LB_get_current_page rsc/cup_home.lxp
  # You are out of free tries!
  #   Price for the new try: [gold-ico.png] 5
 			if ! greplog -i "\(You are out of\|There are no active cups in the moment\)" rsc/cup_home.lxp ; then
-				if joinl="$(grep -o "(Submit) [A-Z][a-z]*" rsc/cup_home.lxp | grep -n Join | grep -o "^[0-9]*")" ; then
+				if joinl="$(grep -o "(\(Submit\|BUTTON\)) [A-Z][a-z]*" rsc/cup_home.lxp | grep -n Join | grep -o "^[0-9]*")" ; then
 					LB_go_nextl $((joinl-1))
 					LB_go_link && sleep $((RANDOM%2+1))
 					ba_cup
-				elif greplog "Left [1-9]" rsc/cup_home.lxp && joinl="$(grep -o "(Submit) [A-Z][a-z]*" rsc/cup_home.lxp | grep -n "Register\>" | grep -o -m1 "^[0-9]*")" ; then
+				elif greplog "Left [1-9]" rsc/cup_home.lxp && joinl="$(grep -o "(\(Submit\|BUTTON\)) [A-Z][a-z]*" rsc/cup_home.lxp | grep -n "Register\>" | grep -o -m1 "^[0-9]*")" ; then
 					#joinl=${joinl##*0}
 					LB_go_nextl $((joinl-1))
 					LB_go_link && sleep $((RANDOM%2+1))
@@ -289,7 +289,7 @@ function ba_clanjob {
 		echolog "clan job: $tosleep seconds more (end at $baClanJobEnd)"
 	elif greplog -o -m1 ">Start<" rsc/clan_job.html ; then
 		LB_go_lastl
-		LB_go_previousl 2
+		LB_go_previousl $((2+(RANDOM%3)%2)) # chances: 0->66% 1->33%
 		LB_go_link
 	elif greplog -o ">Complete<" rsc/clan_job.html ; then
 		LB_go_firstl
@@ -297,7 +297,7 @@ function ba_clanjob {
 		LB_go_link
 		sleep $((RANDOM%2+3))
 		LB_go_lastl
-		LB_go_previousl 2
+		LB_go_previousl $((2+(RANDOM%3)%2)) # chances: 0->66% 1->33%
 		LB_go_link
 	else
 		echolog "ba_clanjob warning: unexpected job page"

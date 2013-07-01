@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LynxBotVersion="LynxBot/0.5 30May2013"
+LynxBotVersion="LynxBot/0.6 01Jul2013"
 
 function exitlynxbot {
 	kill $lynxpid >&2

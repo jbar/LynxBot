@@ -1,0 +1,15 @@
+LynxBot CHANGELOG
+===================
+
+## 0.6 01Jul2013
+
+ * Support more than US-ASCII (UTF-8...) in filenames or for writing string.
+ * Multiple source call to init_lynxbot won't pollute the trap on EXIT.
+
+
+## 0.5 30May2013
+
+ * Fix bugs
+
+## Previously: no changelog ! :-p 
+

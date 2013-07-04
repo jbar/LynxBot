@@ -55,7 +55,14 @@ function LB_startlynxbot {
 		if [ -p "$fifo" -a -p "${fifo/cmd_input/output}" -a ! -f "/tmp/current_bot.${fifo##*.}" ] ; then
 			export LynxBotPid=$$
 			export LynxPid=${fifo#*.}
-			echo -e "LynxBotPid=$LynxBotPid" > "/tmp/current_bot.$LynxPid" || return 1
+
+			# open the input fifo on fd 8
+			exec 8<> "/tmp/lynx_cmd_input.$LynxPid" || return 9
+
+			if ! echo -e "LynxBotPid=$LynxBotPid" > "/tmp/current_bot.$LynxPid" ; then
+				exec 8>&-
+				return 9
+			fi
 			break;
 		fi
 	done
@@ -71,9 +78,6 @@ function LB_startlynxbot {
 	# Start the lynx link and linktype extractor
 	"$LynxBotBin"/extractlastlinkfromlynx /tmp/current_link.$LynxBotPid /tmp/current_linktype.$LynxBotPid /tmp/current_error.$LynxBotPid < "/tmp/lynx_output.$LynxPid" &
 	
-	# open the input fifo on fd 8
-	exec 8<> "/tmp/lynx_cmd_input.$LynxPid"
-
 	# Be sure that lynx is loaded
 	LB_get_current_link > /dev/null
 }

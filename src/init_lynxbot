@@ -53,16 +53,13 @@ function LB_startlynxbot {
 	# search for a lynx to bot
 	for fifo in /tmp/lynx_cmd_input.* ; do 
 		if [ -p "$fifo" -a -p "${fifo/cmd_input/output}" -a ! -f "/tmp/current_bot.${fifo##*.}" ] ; then
-			export LynxBotPid=$$
-			export LynxPid=${fifo#*.}
 
 			# open the input fifo on fd 8
-			exec 8<> "/tmp/lynx_cmd_input.$LynxPid" || return 9
+			exec 8<> "/tmp/lynx_cmd_input.${fifo#*.}" || continue
 
-			if ! echo -e "LynxBotPid=$LynxBotPid" > "/tmp/current_bot.$LynxPid" ; then
-				exec 8>&-
-				return 9
-			fi
+			export LynxBotPid=$$
+			export LynxPid=${fifo#*.}
+			echo -e "LynxBotPid=$LynxBotPid" > "/tmp/current_bot.$LynxPid" || return 9
 			break;
 		fi
 	done

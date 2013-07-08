@@ -32,8 +32,8 @@ function ba_login {
 		return 9
 	fi
 	LB_get_current_info rsc/current_info
-	LB_go_to_url "http://arena.softgames.de"
-	if grep -i "arena.softgames.de/arena/SgGateway" rsc/current_info > /dev/null ; then
+	LB_go_to_url "http://arena.s.d"
+	if grep -i "arena.s.d/arena/SgGateway" rsc/current_info > /dev/null ; then
 		LB_refresh_page
 		ba_gohome
 	fi
@@ -57,7 +57,7 @@ function ba_login {
 				((tosleep=5+RANDOM%25)) # 30 sec max
 				echolog "ba_login warning: unexpected entry field ... ($tosleep sec.)($maxtry)"
 				cp -vf rsc/current.lxp rsc/unexpected_login.lxp
-				LB_go_to_url "http://arena.softgames.de"
+				LB_go_to_url "http://arena.s.d"
 				sleep $tosleep
 			fi
 			sleep 4
@@ -67,7 +67,7 @@ function ba_login {
 			echolog "ba_login warning: unexpected page ... ($tosleep sec.)($maxtry)"
 			cp -vf rsc/current.lxp rsc/unexpected_login.lxp
 			sleep $tosleep 
-			LB_go_to_url "http://arena.softgames.de"
+			LB_go_to_url "http://arena.s.d"
 			sleep 5
 		fi
 		LB_get_current_page rsc/current.lxp

@@ -1,6 +1,10 @@
 LynxBot CHANGELOG
 ===================
 
+## 0.7 05Sep2013
+
+ * New function in the API: LB_get_cookies_info
+
 ## 0.6 01Jul2013
 
  * Support more than US-ASCII (UTF-8...) in filenames or for writing string.

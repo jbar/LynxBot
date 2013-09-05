@@ -1,4 +1,4 @@
-AC_INIT([lynxbot], [0.6], [jeanjacquesbrucker@gmail.com])
+AC_INIT([lynxbot], [0.7], [jeanjacquesbrucker@gmail.com])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_PROG_CC
 AC_CONFIG_HEADERS([config.h])

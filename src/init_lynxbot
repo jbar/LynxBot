@@ -5,7 +5,7 @@ pushd "${BASH_ARGV[0]%/*}" > /dev/null
 export LynxBotBin="$PWD"
 popd > /dev/null
 
-export LB_Help_Version="${BASH_ARGV[0]##*/}/0.6 01Jul2013"
+export LB_Help_Version="${BASH_ARGV[0]##*/}/0.7 05Sep2013"
 echo "$LB_Help_Version
 Tip: all functions and their help messages are \"LB_\" prefixed, usefull for completion !-)
 "
@@ -314,6 +314,34 @@ function LB_get_current_info {
 	done
 }
 export -f LB_get_current_info
+
+LB_Help_get_cookies_info="LB_get_cookies_info [filename]
+Argument 1: file to store the Cookie Jar Page (default: cookies_info)
+echo: nothing
+return 0"
+function LB_get_cookies_info {
+	CurrentPage="${1:-cookies_info}"
+	[ ! -f "$CurrentPage" ] || rm -f "$CurrentPage" || return 3
+	if LB_get_current_linktype | grep -i "\(textarea\|entry field\)" > /dev/null ; then
+		echo "key ^V" >&8
+	fi
+
+	echo "key ^K" >&8
+
+	echo "key p" >&8
+	echo "key ^J" >&8
+	echo "key ^U" >&8
+	"$LynxBotBin"/setstrforlynx "$CurrentPage" >&8
+	echo "key ^J" >&8
+
+	echo "key ^K" >&8
+
+	# using fuser disallow an eventual race bug
+	while ! [ -f "$CurrentPage" ] || /sbin/fuser "$CurrentPage" 2>/dev/null 1>&2 ; do
+		"$LynxBotBin"/usleep 10000
+	done
+}
+export -f LB_get_cookies_info
 
 LB_Help_search_link="LB_search_link [max_number] PATTERN 
 Argument 1: max number of links to parse before exiting, if the number is negative search is done backwards. (default: 64)

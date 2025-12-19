@@ -3,8 +3,14 @@
 LynxBotVersion="LynxBot/0.7 05Sep2013"
 
 function exitlynxbot {
-	kill $lynxpid >&2
-	kill $teepid >&2
+	# Check lynxpid still exist before kill it
+	if ps -p $lynxpid -o args --noheaders | grep -i lynx > /dev/null 2>&1; then
+		kill $lynxpid >&2;
+	fi
+	# Check teepid still exist before kill it
+	if ps -p $teepid -o args --noheaders | grep -ie lynx -ie tee > /dev/null 2>&1; then
+		kill $teepid >&2;
+	fi
 	rm /tmp/lynx_cmd_input.$$ >&2
 	rm /tmp/lynx_output.$$ >&2
 	wait

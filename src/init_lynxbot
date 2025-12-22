@@ -464,7 +464,7 @@ function LB_stop_int_trap {
 	fi
 	# to avoid double stop calls, and try to close fd 8 only if it is opened
 	if [ -e /proc/$$/fd/8 ]; then
-		if LB_get_current_linktype | grep -i "\(textarea\|entry field\)" > /dev/null ; then
+		if LB_get_current_linktype | grep -i "\(textarea\|entry field\|Textfield\)" > /dev/null ; then
 			echo "key ^V" >&8
 		fi
 		echo "key ^D" >&8

@@ -1,6 +1,10 @@
 #!/bin/bash
 # here are the command and function to be sourced to make a lynx bot.
 
+# Backup EXIT 'trap' signals before starting
+# to be able to restore them in LB_stop_int_trap
+SAVED_EXIT_TRAP=$(trap -p INT)
+
 pushd "${BASH_ARGV[0]%/*}" > /dev/null
 export LynxBotBin="$PWD"
 popd > /dev/null
@@ -429,10 +433,13 @@ Close the connected lynx and lynxbot.sh session.
 echo: nothing
 return 0."
 function LB_stop {
-	if LB_get_current_linktype | grep -i "\(textarea\|entry field\|Textfield\)" > /dev/null ; then
-		echo "key ^V" >&8
+    # to avoid double stop calls, and try to close fd 8 only if it is opened
+	if [ -e /proc/$$/fd/8 ] ; then
+		if LB_get_current_linktype | grep -i "\(textarea\|entry field\|Textfield\)" > /dev/null ; then
+			echo "key ^V" >&8
+		fi
+		echo "key ^D" >&8
 	fi
-	echo "key ^D" >&8
 	rm -f "/tmp/current_link.$LynxBotPid" 
 	rm -f "/tmp/current_linktype.$LynxBotPid"
 	rm -f "/tmp/current_error.$LynxBotPid" 2> /dev/null
@@ -442,5 +449,38 @@ function LB_stop {
 	exec 8>&-
 }
 export -f LB_stop
+LB_Help_stop_int_trap="LB_stop_int_trap
+With SIGINT signal (CTRL + C), close the connected lynx and lynxbot.sh session.
+echo: nothing
+return 0."
+function LB_stop_int_trap {
+	# Reset INT trap to avoid recursive calls
+	trap - INT 
+	# Reset EXIT trap to avoid recursive calls
+	if [ -n "$SAVED_EXIT_TRAP" ]; then
+		eval "$SAVED_EXIT_TRAP"
+	else
+		trap - EXIT
+	fi
+	# to avoid double stop calls, and try to close fd 8 only if it is opened
+	if [ -e /proc/$$/fd/8 ]; then
+		if LB_get_current_linktype | grep -i "\(textarea\|entry field\)" > /dev/null ; then
+			echo "key ^V" >&8
+		fi
+		echo "key ^D" >&8
+	fi
+	rm -f "/tmp/current_link.$LynxBotPid" 
+	rm -f "/tmp/current_linktype.$LynxBotPid"
+	rm -f "/tmp/current_error.$LynxBotPid" 2> /dev/null
+	rm -f "/tmp/current_page.$LynxBotPid" 2> /dev/null
+	rm -f "/tmp/current_bot.$LynxPid"
+	wait
+	if [ -e /proc/$$/fd/8 ]; then
+		exec 8>&-
+	fi
+	# Exit script
+	exit 0
+}
+export -f LB_stop_int_trap
 trap -p EXIT | grep LB_stop > /dev/null || trap_add LB_stop 0
-
+trap -p INT | grep LB_stop_int_trap > /dev/null || trap_add LB_stop_int_trap INT

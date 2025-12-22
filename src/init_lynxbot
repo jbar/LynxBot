@@ -119,7 +119,7 @@ return 0"
 function LB_get_current_page {
 	CurrentPage="${1:-current_page}"
 	[ ! -f "$CurrentPage" ] || rm -f "$CurrentPage" || return 3
-	if LB_get_current_linktype | grep -i "\(textarea\|entry field\)" > /dev/null ; then
+	if LB_get_current_linktype | grep -i "\(textarea\|entry field\|Textfield\)" > /dev/null ; then
 		echo "key ^V" >&8
 	fi
 	echo "key p" >&8
@@ -141,7 +141,7 @@ return 0"
 function LB_get_current_source {
 	CurrentPage="${1:-current_source}"
 	[ ! -f "$CurrentPage" ] || rm -f "$CurrentPage" || return 3
-	if LB_get_current_linktype | grep -i "\(textarea\|entry field\)" > /dev/null ; then
+	if LB_get_current_linktype | grep -i "\(textarea\|entry field\|Textfield\)" > /dev/null ; then
 		echo "key ^V" >&8
 	fi
 	echo "key \\" >&8
@@ -220,7 +220,7 @@ Jump to the first link of the page.
 echo: nothing
 return 0"
 function LB_go_firstl {
-	if LB_get_current_linktype | grep -i "\(textarea\|entry field\)" > /dev/null ; then
+	if LB_get_current_linktype | grep -i "\(textarea\|entry field\|Textfield\)" > /dev/null ; then
 		echo "key ^V" >&8
 	fi
 	echo "key Home" >&8
@@ -234,7 +234,7 @@ Jump to the last link of the page.
 echo: nothing
 return 0"
 function LB_go_lastl {
-	if LB_get_current_linktype | grep -i "\(textarea\|entry field\)" > /dev/null ; then
+	if LB_get_current_linktype | grep -i "\(textarea\|entry field\|Textfield\)" > /dev/null ; then
 		echo "key ^V" >&8
 	fi
 	echo "key End" >&8
@@ -251,7 +251,7 @@ function LB_secure_go_to_url {
 	[ "$1" ] || return 9
 
 	[ ! -f "/tmp/current_error.$LynxBotPid" ] || rm -f "/tmp/current_error.$LynxBotPid" || return 3
-	if LB_get_current_linktype | grep -i "\(textarea\|entry field\)" > /dev/null ; then
+	if LB_get_current_linktype | grep -i "\(textarea\|entry field\|Textfield\)" > /dev/null ; then
 		echo "key ^V" >&8
 	fi
 	echo "key g" >&8
@@ -271,7 +271,7 @@ return 9 if no given url, else 0."
 function LB_go_to_url {
 	[ "$1" ] || return 9
 
-	if LB_get_current_linktype | grep -i "\(textarea\|entry field\)" > /dev/null ; then
+	if LB_get_current_linktype | grep -i "\(textarea\|entry field\|Textfield\)" > /dev/null ; then
 		echo "key ^V" >&8
 	fi
 	echo "key g" >&8
@@ -284,7 +284,7 @@ LB_Help_refresh_page="LB_refresh_page
 echo: nothing
 return 0."
 function LB_refresh_page {
-	if LB_get_current_linktype | grep -i "\(textarea\|entry field\)" > /dev/null ; then
+	if LB_get_current_linktype | grep -i "\(textarea\|entry field\|Textfield\)" > /dev/null ; then
 		echo "key ^V" >&8
 	fi
 	echo "key ^R" >&8
@@ -298,7 +298,7 @@ return 0"
 function LB_get_current_info {
 	CurrentPage="${1:-current_info}"
 	[ ! -f "$CurrentPage" ] || rm -f "$CurrentPage" || return 3
-	if LB_get_current_linktype | grep -i "\(textarea\|entry field\)" > /dev/null ; then
+	if LB_get_current_linktype | grep -i "\(textarea\|entry field\|Textfield\)" > /dev/null ; then
 		echo "key ^V" >&8
 	fi
 
@@ -326,7 +326,7 @@ return 0"
 function LB_get_cookies_info {
 	CurrentPage="${1:-cookies_info}"
 	[ ! -f "$CurrentPage" ] || rm -f "$CurrentPage" || return 3
-	if LB_get_current_linktype | grep -i "\(textarea\|entry field\)" > /dev/null ; then
+	if LB_get_current_linktype | grep -i "\(textarea\|entry field\|Textfield\)" > /dev/null ; then
 		echo "key ^V" >&8
 	fi
 
@@ -382,7 +382,7 @@ Argument 2...: passed to grep to search link type (mandatory)
 echo: the number of parsed links, followed by the founded link type (grep output).
 return 0 if the linktype is found, 9 if not.
 
-Note: Types use to be: 'Unknow', 'NORMAL LINK', 'Text entry field', 'Password entry field', 'Form submit button', 'Radio Button', 'Checkbox Field', 'Option list', 'Choice list' and Textarea."
+Note: Types use to be: 'Unknow', 'NORMAL LINK', 'Text entry field' or 'Textfield \"%s\"', 'Password entry field', 'Form submit button', 'Radio Button', 'Checkbox Field', 'Option list', 'Choice list' and Textarea."
 # type can be
 # 0 Unknow
 # 1 NORMAL LINK
@@ -423,7 +423,7 @@ Argument 1: String to write in a Text entry field.
 echo: nothing
 return 9 if current type is not ' entry field' or 'Textarea', 0 if OK."
 function LB_write_string {
-	LB_get_current_linktype | grep -i "\(textarea\|entry field\)" > /dev/null || return 9
+	LB_get_current_linktype | grep -i "\(textarea\|entry field\|Textfield\)" > /dev/null || return 9
 	"$LynxBotBin"/setstrforlynx "$1" >&8
 }
 export -f LB_write_string
@@ -435,7 +435,7 @@ return 0."
 function LB_stop {
     # to avoid double stop calls, and try to close fd 8 only if it is opened
 	if [ -e /proc/$$/fd/8 ] ; then
-		if LB_get_current_linktype | grep -i "\(textarea\|entry field\)" > /dev/null ; then
+		if LB_get_current_linktype | grep -i "\(textarea\|entry field\|Textfield\)" > /dev/null ; then
 			echo "key ^V" >&8
 		fi
 		echo "key ^D" >&8
@@ -464,7 +464,7 @@ function LB_stop_int_trap {
 	fi
 	# to avoid double stop calls, and try to close fd 8 only if it is opened
 	if [ -e /proc/$$/fd/8 ]; then
-		if LB_get_current_linktype | grep -i "\(textarea\|entry field\)" > /dev/null ; then
+		if LB_get_current_linktype | grep -i "\(textarea\|entry field\|Textfield\)" > /dev/null ; then
 			echo "key ^V" >&8
 		fi
 		echo "key ^D" >&8

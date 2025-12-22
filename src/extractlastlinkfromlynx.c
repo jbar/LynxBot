@@ -38,7 +38,7 @@ int main(int argc, char * argv[])
           && ( fgetc(stdin) == 'm' ) ) {
             i=0;
             while ( (ichar=fgetc(stdin)) != EOF && ichar != '\033' 
-                    && ( jchar!='4' || ichar == ' ' || ichar == '(' || ( ichar >= 'A' && ichar <= 'z' ) ) )
+                    && ( jchar!='4' || ichar == ' ' || ichar == '(' || ( ichar >= 'A' && ichar <= 'z' ) || ichar == '%' || ichar == '"' ) )
                 if ( i < SIZEMAX-1 && ( jchar!='4' || ichar != '(' ) )
                     current[i++]=ichar;
 
